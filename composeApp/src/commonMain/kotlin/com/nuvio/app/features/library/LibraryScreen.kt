@@ -80,6 +80,8 @@ import com.nuvio.app.features.home.components.HomeSkeletonRow
 import com.nuvio.app.features.profiles.ProfileRepository
 import com.nuvio.app.features.watched.WatchedRepository
 import com.nuvio.app.features.watching.application.WatchingState
+import com.nuvio.app.features.trakt.TraktCalendarRepository
+import com.nuvio.app.features.trakt.TraktCalendarEntry
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.launch
