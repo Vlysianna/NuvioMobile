@@ -57,6 +57,108 @@ jobs:
         run: |
           printf 'NUVIO_SUPABASE_URL=%s\n' "https://api.nuvio.tv" > local.properties
           printf 'NUVIO_SUPABASE_ANON_KEY=%s\n' "sb_publishable_1Clq8rlTVACkdcZuqr6_AD__xUUC_EN" >> local.properties
+          printf 'NUVIO_SUPABASE_FALLBACK_URL=%s\n' "https://api.nuvio.tv" >> local.properties
+          printf 'TRAKT_CLIENT_ID=%s\n' "${{ secrets.TRAKT_CLIENT_ID }}" >> local.properties
+          printf 'TRAKT_CLIENT_SECRET=%s\n' "${{ secrets.TRAKT_CLIENT_SECRET }}" >> local.properties
+          printf 'TRAKT_REDIRECT_URI=%s\n' "${{ secrets.TRAKT_REDIRECT_URI }}" >> local.properties
+          printf 'INTRODB_API_URL=%s/\n' "${{ secrets.INTRODB_API_URL }}" >> local.properties
+          printf 'TMDB_API_KEY=%s\n' "${{ secrets.TMDB_API_KEY }}" >> local.properties
+          printf 'NUVIO_RELEASE_STORE_FILE=%s/nuvio-release.keystore\n' "${{ github.workspace }}" >> local.properties
+          printf 'NUVIO_RELEASE_STORE_PASSWORD=%s\n' "nuvio1234" >> local.properties
+          printf 'NUVIO_RELEASE_KEY_ALIAS=%s\n' "nuvio-release" >> local.properties
+          printf 'NUVIO_RELEASE_KEY_PASSWORD=%s\n' "nuvio1234" >> local.properties
+          printf 'DONATIONS_BASE_URL=%s\n' "https://donations.nuvioapp.space/" >> local.properties
+          printf 'DONATIONS_DONATE_URL=%s\n' "https://ko-fi.com/tapframe" >> local.properties
+          printf 'CONTRIBUTIONS_URL=%s\n' "${{ secrets.CONTRIBUTION_URL }}" >> local.properties
+          printf 'DIRECT_DEBRID_API_BASE_URL=%s\n' "https://api.torbox.app/v1/api" >> local.properties
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Generate Changelog
+        id: changelog
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PREV_TAG=$(gh release list --limit 1 --json tagName -q '.[0].tagName' 2>/dev/null || echo "")
+
+          if [ -n "$PREV_TAG" ]; then
+            COMMITS=$(git log "${PREV_TAG}..HEAD" --pretty=format:"- %s (%h)" --no-merges)
+          else
+            COMMITS=$(git log HEAD --pretty=format:"- %s (%h)" --no-merges -n 20)
+          fi
+
+          if [ -z "$COMMITS" ]; then
+            COMMITS="- Nessuna modifica rilevata rispetto alla release precedente"
+          fi
+
+          {
+            echo "## 🔨 Changes"
+            echo ""
+            echo "$COMMITS"
+          } > release_body.md
+
+      - name: Build Full Release APK
+        run: |
+          ./gradlew assembleFullRelease
+
+      - name: Rename APK
+        run: |
+          APK_DIR="androidApp/build/outputs/apk/full/release"
+          find "$APK_DIR" -name "*.apk" | while read apk; do
+            DIR=$(dirname "$apk")
+            mv "$apk" "$DIR/NuvioMobile-${{ steps.version.outputs.name }}.apk"
+          done
+
+      - name: Create GitHub Release and Upload APK
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          RELEASE_TAG="v${{ steps.version.outputs.name }}"
+
+          if gh release view "$RELEASE_TAG" --json id &>/dev/null; then
+            echo "Release tag $RELEASE_TAG already exists, uploading APK..."
+            find androidApp/build/outputs/apk/full/release -name "*.apk" -exec gh release upload "$RELEASE_TAG" {} --clobber \;
+          else
+            echo "Creating release $RELEASE_TAG..."
+            gh release create "$RELEASE_TAG" \
+              --title "NuvioMobile v${{ steps.version.outputs.name }}" \
+              --notes-file release_body.md \
+              --target ${{ github.ref_name }}
+            find androidApp/build/outputs/apk/full/release -name "*.apk" -exec gh release upload "$RELEASE_TAG" {} --clobber \;
+          fi
+
+      - name: Send ntfy Notification
+        run: |
+          curl \
+            -H "Title: 🎉 Android Build Completata!" \
+            -H "Priority: high" \
+            -H "Tags: rocket,android" \
+            -H "Click: https://github.com/${{ github.repository }}/releases/tag/v${{ steps.version.outputs.name }}" \
+            -d "Build **Android v${{ steps.version.outputs.name }}** pronta! 🚀 APK caricato." \
+            https://ntfy.sh/nuvio_builds      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Generate Keystore
+        run: |
+          keytool -genkeypair \
+            -alias nuvio-release \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 10000 \
+            -keystore ${{ github.workspace }}/nuvio-release.keystore \
+            -storepass nuvio1234 \
+            -keypass nuvio1234 \
+            -dname "CN=Nuvio, OU=Dev, O=Nuvio, L=Unknown, ST=Unknown, C=US"
+
+      - name: Write local.properties
+        run: |
+          printf 'NUVIO_SUPABASE_URL=%s\n' "https://api.nuvio.tv" > local.properties
+          printf 'NUVIO_SUPABASE_ANON_KEY=%s\n' "sb_publishable_1Clq8rlTVACkdcZuqr6_AD__xUUC_EN" >> local.properties
           printf 'NUVIO_SUPABASE_FALLBACK_URL=%s\n' "https://api.nuvio.tv" >> local.properties=
           printf 'NUVIO_RELEASE_STORE_FILE=%s/nuvio-release.keystore\n' "${{ github.workspace }}" >> local.properties
           printf 'NUVIO_RELEASE_STORE_PASSWORD=%s\n' "nuvio1234" >> local.properties
