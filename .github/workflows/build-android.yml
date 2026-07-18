@@ -123,7 +123,7 @@ jobs:
             gh release create "$RELEASE_TAG" \
               --title "NuvioMobile v${{ steps.version.outputs.name }}" \
               --notes-file release_body.md \
-              --target ${{ steps.resolve_branch.outputs.branch }}
+              --target ${{ github.ref_name }}
             find androidApp/build/outputs/apk/full/release -name "*.apk" -exec gh release upload "$RELEASE_TAG" {} --clobber \;
           fi
 
