@@ -114,6 +114,7 @@ fun LibraryScreen(
         HomeCatalogSettingsRepository.uiState
     }.collectAsStateWithLifecycle()
     val networkStatusUiState by NetworkStatusRepository.uiState.collectAsStateWithLifecycle()
+    val calendarEntries by TraktCalendarRepository.upcomingShows.collectAsStateWithLifecycle()
     var observedOfflineState by remember { mutableStateOf(false) }
     var sourceModeName by rememberSaveable { mutableStateOf(LibraryViewMode.Saved.name) }
     val sourceMode = remember(sourceModeName) {
@@ -220,7 +221,9 @@ fun LibraryScreen(
             }
         }
 
-        if (sourceMode == LibraryViewMode.Cloud) {
+        if (sourceMode == LibraryViewMode.Calendar) {
+            libraryCalendarContent()
+        } else if (sourceMode == LibraryViewMode.Cloud) {
             cloudLibraryContent(
                 uiState = cloudUiState,
                 selectedProviderId = selectedProviderId,
@@ -312,6 +315,7 @@ fun LibraryScreen(
                     librarySections(
                         displaySections = librarySectionsDisplay,
                         watchedKeys = watchedUiState.watchedKeys,
+                        calendarEntries = calendarEntries,
                         showHeaderAccent = !homeCatalogSettingsUiState.hideCatalogUnderline,
                         onPosterClick = onPosterClick,
                         onSectionViewAllClick = onSectionViewAllClick,
@@ -473,6 +477,11 @@ private fun LibrarySourceSwitch(
             label = stringResource(Res.string.library_source_cloud),
             selected = selectedMode == LibraryViewMode.Cloud,
             onClick = { onModeSelected(LibraryViewMode.Cloud) },
+        )
+        LibraryChip(
+            label = "Calendar",
+            selected = selectedMode == LibraryViewMode.Calendar,
+            onClick = { onModeSelected(LibraryViewMode.Calendar) },
         )
     }
 }
@@ -994,11 +1003,13 @@ private fun CloudSkeletonBlock(
 private enum class LibraryViewMode {
     Saved,
     Cloud,
+    Calendar,
 }
 
 private fun LazyListScope.librarySections(
     displaySections: List<LibraryDisplaySection>,
     watchedKeys: Set<String>,
+    calendarEntries: List<TraktCalendarEntry>,
     showHeaderAccent: Boolean,
     onPosterClick: ((LibraryItem) -> Unit)?,
     onSectionViewAllClick: ((LibrarySection) -> Unit)?,
@@ -1025,23 +1036,37 @@ private fun LazyListScope.librarySections(
             val item = entry.item
             val posterItem = item.toMetaPreview()
             val entrySource = entry.section
+            val upcomingDate = calendarEntries.firstOrNull { 
+                it.tmdbId?.toString() == item.id || it.imdbId == item.id 
+            }?.firstAired?.substringBefore("T")
+
             DisintegratingContainer(
                 disintegrating = entry.exiting,
                 onDisintegrated = { onDisintegrated(entry.globalKey) },
             ) {
-                HomePosterCard(
-                    item = posterItem,
-                    isWatched = WatchingState.isPosterWatched(
-                        watchedKeys = watchedKeys,
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    HomePosterCard(
                         item = posterItem,
-                    ),
-                    onClick = if (entry.exiting) null else onPosterClick?.let { { it(item) } },
-                    onLongClick = if (entry.exiting || entrySource == null) {
-                        null
-                    } else {
-                        onPosterLongClick?.let { { it(item, entrySource) } }
-                    },
-                )
+                        isWatched = WatchingState.isPosterWatched(
+                            watchedKeys = watchedKeys,
+                            item = posterItem,
+                        ),
+                        onClick = if (entry.exiting) null else onPosterClick?.let { { it(item) } },
+                        onLongClick = if (entry.exiting || entrySource == null) {
+                            null
+                        } else {
+                            onPosterLongClick?.let { { it(item, entrySource) } }
+                        },
+                    )
+                    if (upcomingDate != null) {
+                        Text(
+                            text = upcomingDate,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(top = 4.dp)
+                        )
+                    }
+                }
             }
         }
     }
