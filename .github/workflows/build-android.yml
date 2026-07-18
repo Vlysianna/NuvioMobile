@@ -28,11 +28,11 @@ jobs:
     - name: Create local.properties
       run: touch local.properties
 
-    - name: Build Android APK (Full Release)
-      run: ./gradlew assembleFullRelease
+    - name: Build Android APK (Full Debug)
+      run: ./gradlew assembleDebugRelease
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
-        name: Nuvio-Full-Release-APK
+        name: Nuvio-Full-Debug-APK
         path: androidApp/build/outputs/apk/full/release/*.apk
