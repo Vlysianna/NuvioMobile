@@ -25,6 +25,9 @@ jobs:
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
 
+    - name: Create local.properties
+      run: touch local.properties
+
     - name: Build Android APK (Full Release)
       run: ./gradlew assembleFullRelease
 
@@ -32,4 +35,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: Nuvio-Full-Release-APK
-        path: androidApp/build/outputs/apk/full/debug/*.apk
+        path: androidApp/build/outputs/apk/full/release/*.apk
