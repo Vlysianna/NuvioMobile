@@ -55,8 +55,9 @@ jobs:
 
       - name: Write local.properties
         run: |
-          printf 'SUPABASE_URL=%s\n' "${{ secrets.SUPABASE_URL }}" > local.properties
-          printf 'SUPABASE_ANON_KEY=%s\n' "${{ secrets.SUPABASE_ANON_KEY }}" >> local.properties
+          printf 'NUVIO_SUPABASE_URL=%s\n' "https://api.nuvio.tv" > local.properties
+          printf 'NUVIO_SUPABASE_ANON_KEY=%s\n' "${{ secrets.SUPABASE_ANON_KEY }}" >> local.properties
+          printf 'NUVIO_SUPABASE_FALLBACK_URL=%s\n' "https://api.nuvio.tv" >> local.properties
           printf 'TRAKT_CLIENT_ID=%s\n' "${{ secrets.TRAKT_CLIENT_ID }}" >> local.properties
           printf 'TRAKT_CLIENT_SECRET=%s\n' "${{ secrets.TRAKT_CLIENT_SECRET }}" >> local.properties
           printf 'TRAKT_REDIRECT_URI=%s\n' "${{ secrets.TRAKT_REDIRECT_URI }}" >> local.properties
