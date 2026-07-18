@@ -2,16 +2,11 @@ name: Build Android Full Release
 
 on:
   workflow_dispatch:
-    inputs:
-      target_branch:
-        description: 'Branch to build'
-        required: false
-        default: 'main'
-        type: string
   push:
     branches:
       - "main"
       - "master"
+      - "personal"
 
 permissions:
   contents: write
@@ -21,22 +16,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Resolve target branch
-        id: resolve_branch
-        run: |
-          INPUT_BRANCH="${{ github.event.inputs.target_branch }}"
-          if [ -z "$INPUT_BRANCH" ]; then
-            CHOSEN_BRANCH="${{ github.ref_name }}"
-          else
-            CHOSEN_BRANCH="$INPUT_BRANCH"
-          fi
-          echo "branch=$CHOSEN_BRANCH" >> $GITHUB_OUTPUT
-          echo "Selected branch: $CHOSEN_BRANCH"
-
-      - name: Checkout target branch code
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          ref: ${{ steps.resolve_branch.outputs.branch }}
           fetch-depth: 0
           lfs: false
 
