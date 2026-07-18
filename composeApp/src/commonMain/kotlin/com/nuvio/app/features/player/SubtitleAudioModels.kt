@@ -39,6 +39,14 @@ enum class AddonSubtitleStartupMode {
     ALL_SUBTITLES,
 }
 
+enum class SubtitleEdgeEffect {
+    NONE,
+    OUTLINE,
+    DROP_SHADOW,
+    RAISED,
+    DEPRESSED,
+}
+
 const val SUBTITLE_DELAY_MIN_MS = -60_000
 const val SUBTITLE_DELAY_MAX_MS = 60_000
 const val SUBTITLE_DELAY_STEP_MS = 100
@@ -50,6 +58,7 @@ data class SubtitleStyleState(
     val outlineColor: Color = Color.Black,
     val outlineEnabled: Boolean = true,
     val outlineWidth: Int = 2,
+    val edgeEffect: SubtitleEdgeEffect = SubtitleEdgeEffect.OUTLINE,
     val bold: Boolean = false,
     val fontSizeSp: Int = 18,
     val bottomOffset: Int = 20,

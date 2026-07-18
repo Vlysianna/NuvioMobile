@@ -41,6 +41,12 @@ import nuvio.composeapp.generated.resources.compose_player_bold
 import nuvio.composeapp.generated.resources.compose_player_bottom_offset
 import nuvio.composeapp.generated.resources.compose_player_capture_line
 import nuvio.composeapp.generated.resources.compose_player_color
+import nuvio.composeapp.generated.resources.compose_player_edge_effect
+import nuvio.composeapp.generated.resources.compose_player_edge_effect_depressed
+import nuvio.composeapp.generated.resources.compose_player_edge_effect_drop_shadow
+import nuvio.composeapp.generated.resources.compose_player_edge_effect_none
+import nuvio.composeapp.generated.resources.compose_player_edge_effect_outline
+import nuvio.composeapp.generated.resources.compose_player_edge_effect_raised
 import nuvio.composeapp.generated.resources.compose_player_font_size
 import nuvio.composeapp.generated.resources.compose_player_font_size_value
 import nuvio.composeapp.generated.resources.compose_player_loading_lines
@@ -171,6 +177,20 @@ fun SubtitleStylePanel(
             )
         }
 
+        SubtitleStyleSection(title = stringResource(Res.string.compose_player_edge_effect)) {
+            SubtitleEdgeEffectPicker(
+                selectedEffect = style.edgeEffect,
+                onEffectSelected = { effect ->
+                    onStyleChanged(
+                        style.copy(
+                            edgeEffect = effect,
+                            outlineEnabled = if (effect == SubtitleEdgeEffect.NONE) false else style.outlineEnabled,
+                        )
+                    )
+                },
+            )
+        }
+
         SubtitleStyleSection(title = stringResource(Res.string.compose_player_bottom_offset)) {
             SubtitleStyleStepper(
                 value = style.bottomOffset.toString(),
@@ -297,6 +317,42 @@ private fun SubtitleToggleChip(
             color = if (enabled) tokens.colors.onAccent else Color.White,
             style = MaterialTheme.typography.labelLarge,
         )
+    }
+}
+
+@Composable
+private fun SubtitleEdgeEffectPicker(
+    selectedEffect: SubtitleEdgeEffect,
+    onEffectSelected: (SubtitleEdgeEffect) -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        SubtitleEdgeEffect.entries.forEach { effect ->
+            val selected = effect == selectedEffect
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(if (selected) MaterialTheme.nuvio.colors.accent else Color.White.copy(alpha = 0.08f))
+                    .clickable { onEffectSelected(effect) }
+                    .padding(horizontal = 14.dp, vertical = 10.dp),
+            ) {
+                Text(
+                    text = when (effect) {
+                        SubtitleEdgeEffect.NONE -> stringResource(Res.string.compose_player_edge_effect_none)
+                        SubtitleEdgeEffect.OUTLINE -> stringResource(Res.string.compose_player_edge_effect_outline)
+                        SubtitleEdgeEffect.DROP_SHADOW -> stringResource(Res.string.compose_player_edge_effect_drop_shadow)
+                        SubtitleEdgeEffect.RAISED -> stringResource(Res.string.compose_player_edge_effect_raised)
+                        SubtitleEdgeEffect.DEPRESSED -> stringResource(Res.string.compose_player_edge_effect_depressed)
+                    },
+                    color = if (selected) MaterialTheme.nuvio.colors.onAccent else Color.White,
+                    style = MaterialTheme.typography.labelLarge,
+                )
+            }
+        }
     }
 }
 

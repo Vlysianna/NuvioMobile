@@ -267,6 +267,15 @@ object PlayerSettingsRepository {
                 ?: SubtitleStyleState.DEFAULT.outlineEnabled,
             outlineWidth = PlayerSettingsStorage.loadSubtitleOutlineWidth()
                 ?: SubtitleStyleState.DEFAULT.outlineWidth,
+            edgeEffect = PlayerSettingsStorage.loadSubtitleEdgeEffect()
+                ?.let { runCatching { SubtitleEdgeEffect.valueOf(it) }.getOrNull() }
+                ?: if (PlayerSettingsStorage.loadSubtitleOutlineEnabled()
+                        ?: SubtitleStyleState.DEFAULT.outlineEnabled
+                ) {
+                    SubtitleEdgeEffect.OUTLINE
+                } else {
+                    SubtitleEdgeEffect.NONE
+                },
             bold = PlayerSettingsStorage.loadSubtitleBold()
                 ?: SubtitleStyleState.DEFAULT.bold,
             fontSizeSp = PlayerSettingsStorage.loadSubtitleFontSizeSp()
@@ -502,6 +511,7 @@ object PlayerSettingsRepository {
         PlayerSettingsStorage.saveSubtitleOutlineColor(style.outlineColor.toStorageHexString())
         PlayerSettingsStorage.saveSubtitleOutlineEnabled(style.outlineEnabled)
         PlayerSettingsStorage.saveSubtitleOutlineWidth(style.outlineWidth)
+        PlayerSettingsStorage.saveSubtitleEdgeEffect(style.edgeEffect.name)
         PlayerSettingsStorage.saveSubtitleBold(style.bold)
         PlayerSettingsStorage.saveSubtitleFontSizeSp(style.fontSizeSp)
         PlayerSettingsStorage.saveSubtitleBottomOffset(style.bottomOffset)

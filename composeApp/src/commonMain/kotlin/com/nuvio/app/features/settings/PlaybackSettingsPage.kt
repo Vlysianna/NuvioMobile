@@ -70,6 +70,7 @@ import com.nuvio.app.features.player.PlayerSettingsRepository
 import com.nuvio.app.features.player.STREAM_AUTO_PLAY_TIMEOUT_VALUES
 import com.nuvio.app.features.player.SubtitleBackgroundColorSwatches
 import com.nuvio.app.features.player.SubtitleColorSwatches
+import com.nuvio.app.features.player.SubtitleEdgeEffect
 import com.nuvio.app.features.player.SubtitleLanguageOption
 import com.nuvio.app.features.player.formatPlaybackSpeedLabel
 import com.nuvio.app.features.player.languageLabelForCode
@@ -250,6 +251,15 @@ private fun subtitleColorLabel(color: Color): String {
 }
 
 @Composable
+private fun subtitleEdgeEffectLabel(effect: SubtitleEdgeEffect): String = when (effect) {
+    SubtitleEdgeEffect.NONE -> stringResource(Res.string.settings_playback_subtitle_edge_effect_none)
+    SubtitleEdgeEffect.OUTLINE -> stringResource(Res.string.settings_playback_subtitle_edge_effect_outline)
+    SubtitleEdgeEffect.DROP_SHADOW -> stringResource(Res.string.settings_playback_subtitle_edge_effect_drop_shadow)
+    SubtitleEdgeEffect.RAISED -> stringResource(Res.string.settings_playback_subtitle_edge_effect_raised)
+    SubtitleEdgeEffect.DEPRESSED -> stringResource(Res.string.settings_playback_subtitle_edge_effect_depressed)
+}
+
+@Composable
 private fun PlaybackSettingsSection(
     isTablet: Boolean,
     showLoadingOverlay: Boolean,
@@ -280,6 +290,7 @@ private fun PlaybackSettingsSection(
     var showSubtitleTextColorDialog by remember { mutableStateOf(false) }
     var showSubtitleBackgroundColorDialog by remember { mutableStateOf(false) }
     var showSubtitleOutlineColorDialog by remember { mutableStateOf(false) }
+    var showSubtitleEdgeEffectDialog by remember { mutableStateOf(false) }
     var showExternalPlayerDialog by remember { mutableStateOf(false) }
     var showExternalPlayerAppDialog by remember { mutableStateOf(false) }
     var showReuseCacheDurationDialog by remember { mutableStateOf(false) }
@@ -589,6 +600,14 @@ private fun PlaybackSettingsSection(
                         onClick = { showSubtitleOutlineColorDialog = true },
                     )
                 }
+                SettingsGroupDivider(isTablet = isTablet)
+                SettingsNavigationRow(
+                    title = stringResource(Res.string.settings_playback_subtitle_edge_effect),
+                    description = subtitleEdgeEffectLabel(subtitleStyle.edgeEffect),
+                    enabled = subtitleRenderingEnabled,
+                    isTablet = isTablet,
+                    onClick = { showSubtitleEdgeEffectDialog = true },
+                )
                 val showLibassSettings = !isIos && androidPlaybackEngine != AndroidPlaybackEngine.Libmpv
                 if (showLibassSettings) {
                     SettingsGroupDivider(isTablet = isTablet)
@@ -1285,6 +1304,22 @@ private fun PlaybackSettingsSection(
                 showSubtitleOutlineColorDialog = false
             },
             onDismiss = { showSubtitleOutlineColorDialog = false },
+        )
+    }
+
+    if (showSubtitleEdgeEffectDialog) {
+        SubtitleEdgeEffectDialog(
+            selectedEffect = autoPlayPlayerSettings.subtitleStyle.edgeEffect,
+            onEffectSelected = { effect ->
+                PlayerSettingsRepository.setSubtitleStyle(
+                    autoPlayPlayerSettings.subtitleStyle.copy(
+                        edgeEffect = effect,
+                        outlineEnabled = if (effect == SubtitleEdgeEffect.NONE) false else autoPlayPlayerSettings.subtitleStyle.outlineEnabled,
+                    )
+                )
+                showSubtitleEdgeEffectDialog = false
+            },
+            onDismiss = { showSubtitleEdgeEffectDialog = false },
         )
     }
 
@@ -2616,6 +2651,119 @@ private fun SubtitleColorDialog(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+            }
+        }
+    }
+}
+
+@Composable
+@OptIn(ExperimentalMaterial3Api::class)
+private fun SubtitleEdgeEffectDialog(
+    selectedEffect: SubtitleEdgeEffect,
+    onEffectSelected: (SubtitleEdgeEffect) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val options = listOf(
+        Triple(
+            SubtitleEdgeEffect.NONE,
+            Res.string.settings_playback_subtitle_edge_effect_none,
+            Res.string.settings_playback_subtitle_edge_effect_none_description,
+        ),
+        Triple(
+            SubtitleEdgeEffect.OUTLINE,
+            Res.string.settings_playback_subtitle_edge_effect_outline,
+            Res.string.settings_playback_subtitle_edge_effect_outline_description,
+        ),
+        Triple(
+            SubtitleEdgeEffect.DROP_SHADOW,
+            Res.string.settings_playback_subtitle_edge_effect_drop_shadow,
+            Res.string.settings_playback_subtitle_edge_effect_drop_shadow_description,
+        ),
+        Triple(
+            SubtitleEdgeEffect.RAISED,
+            Res.string.settings_playback_subtitle_edge_effect_raised,
+            Res.string.settings_playback_subtitle_edge_effect_raised_description,
+        ),
+        Triple(
+            SubtitleEdgeEffect.DEPRESSED,
+            Res.string.settings_playback_subtitle_edge_effect_depressed,
+            Res.string.settings_playback_subtitle_edge_effect_depressed_description,
+        ),
+    )
+
+    BasicAlertDialog(
+        onDismissRequest = onDismiss,
+    ) {
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(20.dp),
+            color = MaterialTheme.colorScheme.surface,
+        ) {
+            Column(
+                modifier = Modifier.padding(20.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Text(
+                    text = stringResource(Res.string.settings_playback_subtitle_edge_effect),
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontWeight = FontWeight.SemiBold,
+                )
+
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    options.forEach { (effect, titleRes, descriptionRes) ->
+                        val isSelected = effect == selectedEffect
+                        val containerColor = if (isSelected) {
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)
+                        } else {
+                            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
+                        }
+
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { onEffectSelected(effect) },
+                            shape = RoundedCornerShape(12.dp),
+                            color = containerColor,
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 14.dp, vertical = 12.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = stringResource(titleRes),
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                    )
+                                    Spacer(modifier = Modifier.height(2.dp))
+                                    Text(
+                                        text = stringResource(descriptionRes),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                }
+                                Box(
+                                    modifier = Modifier.size(24.dp),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    if (isSelected) {
+                                        Icon(
+                                            imageVector = Icons.Rounded.Check,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.primary,
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }

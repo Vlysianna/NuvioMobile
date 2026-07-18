@@ -1590,6 +1590,17 @@ private fun PlayerView.applySubtitleStyle(style: SubtitleStyleState, pipScale: F
         val baseBottomPaddingFraction = SubtitleView.DEFAULT_BOTTOM_PADDING_FRACTION * 2f / 3f
         val offsetFraction = (style.bottomOffset / 1000f).coerceIn(0f, 0.2f)
         val bottomPaddingFraction = (baseBottomPaddingFraction + offsetFraction).coerceIn(0f, 0.4f)
+        val edgeType = when (style.edgeEffect) {
+            SubtitleEdgeEffect.NONE -> if (style.outlineEnabled) {
+                CaptionStyleCompat.EDGE_TYPE_OUTLINE
+            } else {
+                CaptionStyleCompat.EDGE_TYPE_NONE
+            }
+            SubtitleEdgeEffect.OUTLINE -> CaptionStyleCompat.EDGE_TYPE_OUTLINE
+            SubtitleEdgeEffect.DROP_SHADOW -> CaptionStyleCompat.EDGE_TYPE_DROP_SHADOW
+            SubtitleEdgeEffect.RAISED -> CaptionStyleCompat.EDGE_TYPE_RAISED
+            SubtitleEdgeEffect.DEPRESSED -> CaptionStyleCompat.EDGE_TYPE_DEPRESSED
+        }
 
         setApplyEmbeddedStyles(false)
         setApplyEmbeddedFontSizes(false)
@@ -1599,7 +1610,7 @@ private fun PlayerView.applySubtitleStyle(style: SubtitleStyleState, pipScale: F
                 style.textColor.toArgb(),
                 style.backgroundColor.toArgb(),
                 android.graphics.Color.TRANSPARENT,
-                if (style.outlineEnabled) CaptionStyleCompat.EDGE_TYPE_OUTLINE else CaptionStyleCompat.EDGE_TYPE_NONE,
+                edgeType,
                 style.outlineColor.toArgb(),
                 if (style.bold) Typeface.DEFAULT_BOLD else Typeface.DEFAULT,
             )
