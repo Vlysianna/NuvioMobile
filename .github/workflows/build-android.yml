@@ -41,10 +41,17 @@ jobs:
           distribution: 'temurin'
           cache: gradle
 
-      - name: Decode Keystore
+      - name: Generate Keystore
         run: |
-          # Make sure to add KEYSTORE_BASE64 to your GitHub repository secrets!
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > ${{ github.workspace }}/nuvio-release.keystore
+          keytool -genkeypair \
+            -alias nuvio-release \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 10000 \
+            -keystore ${{ github.workspace }}/nuvio-release.keystore \
+            -storepass nuvio1234 \
+            -keypass nuvio1234 \
+            -dname "CN=Nuvio, OU=Dev, O=Nuvio, L=Unknown, ST=Unknown, C=US"
 
       - name: Write local.properties
         run: |
