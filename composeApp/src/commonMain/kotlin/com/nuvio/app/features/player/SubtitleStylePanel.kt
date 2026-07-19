@@ -132,6 +132,15 @@ fun SubtitleStylePanel(
             )
         }
 
+        SubtitleStyleSection(title = "Font Family") {
+            SubtitleFontFamilyPicker(
+                selectedFont = style.fontFamily,
+                onFontSelected = { font ->
+                    onStyleChanged(style.copy(fontFamily = font))
+                },
+            )
+        }
+
         SubtitleStyleSection(title = stringResource(Res.string.compose_player_color)) {
             SubtitleColorPicker(
                 colors = SubtitleColorSwatches,
@@ -162,6 +171,22 @@ fun SubtitleStylePanel(
                 enabled = style.outlineEnabled,
                 onClick = { onStyleChanged(style.copy(outlineEnabled = !style.outlineEnabled)) },
             )
+            if (style.outlineEnabled) {
+                Text(
+                    text = "Thickness",
+                    color = Color.White.copy(alpha = 0.72f),
+                    style = MaterialTheme.typography.bodySmall,
+                )
+                SubtitleStyleStepper(
+                    value = style.outlineWidth.toString(),
+                    onDecrease = {
+                        onStyleChanged(style.copy(outlineWidth = (style.outlineWidth - 1).coerceAtLeast(1)))
+                    },
+                    onIncrease = {
+                        onStyleChanged(style.copy(outlineWidth = (style.outlineWidth + 1).coerceAtMost(10)))
+                    },
+                )
+            }
             Text(
                 text = stringResource(Res.string.compose_player_outline_color),
                 color = Color.White.copy(alpha = 0.72f),
@@ -545,3 +570,41 @@ private val SubtitleOutlineColorSwatches = listOf(
     Color(0xFF00E5FF),
     Color(0xFFFF5C5C),
 )
+
+@Composable
+private fun SubtitleFontFamilyPicker(
+    selectedFont: String?,
+    onFontSelected: (String?) -> Unit,
+) {
+    val fonts = listOf(
+        null to "Default",
+        "sans-serif" to "Sans Serif",
+        "serif" to "Serif",
+        "monospace" to "Monospace",
+        "cursive" to "Cursive",
+    )
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        fonts.forEach { (fontKey, fontName) ->
+            val selected = fontKey == selectedFont
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(if (selected) MaterialTheme.nuvio.colors.accent else Color.White.copy(alpha = 0.08f))
+                    .clickable { onFontSelected(fontKey) }
+                    .padding(horizontal = 14.dp, vertical = 10.dp),
+            ) {
+                Text(
+                    text = fontName,
+                    color = if (selected) MaterialTheme.nuvio.colors.onAccent else Color.White,
+                    style = MaterialTheme.typography.labelLarge,
+                )
+            }
+        }
+    }
+}
+

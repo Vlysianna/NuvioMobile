@@ -95,8 +95,8 @@ import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 import nuvio.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.stringResource
-
-// ---------------------------------------------------------------------------
+import androidx.compose.material.icons.rounded.Folder
+import com.nuvio.app.features.streams.rememberLocalFilePicker
 // Streams Screen
 // ---------------------------------------------------------------------------
 
@@ -187,6 +187,18 @@ fun StreamsScreen(
         }
     }
 
+    val localFilePicker = rememberLocalFilePicker { uri ->
+        if (uri != null) {
+            val localStream = StreamItem(
+                name = "Local File",
+                url = uri,
+                addonName = "Local",
+                addonId = "local",
+            )
+            onStreamSelected(localStream, null, null)
+        }
+    }
+
     LaunchedEffect(type, videoId, seasonNumber, episodeNumber, manualSelection) {
         StreamsRepository.load(
             type = type,
@@ -251,6 +263,7 @@ fun StreamsScreen(
                 },
                 onStreamLongPress = { stream -> streamActionsTarget = stream },
                 onRefresh = reloadStreams,
+                onPlayLocalFile = localFilePicker,
             )
         } else {
             MobileStreamsLayout(
@@ -461,6 +474,7 @@ private fun MobileStreamsLayout(
     onStreamSelected: (stream: StreamItem, resumePositionMs: Long?, resumeProgressFraction: Float?) -> Unit,
     onStreamLongPress: (StreamItem) -> Unit,
     onRefresh: () -> Unit,
+    onPlayLocalFile: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Box(modifier = modifier.fillMaxSize()) {
@@ -534,6 +548,7 @@ private fun MobileStreamsLayout(
                         selectedFilter = uiState.selectedFilter,
                         onFilterSelected = { addonId -> StreamsRepository.selectFilter(addonId) },
                         onRefresh = onRefresh,
+                        onPlayLocalFile = onPlayLocalFile,
                     )
 
                     StreamList(
@@ -744,6 +759,7 @@ internal fun ProviderFilterRow(
     selectedFilter: String?,
     onFilterSelected: (String?) -> Unit,
     onRefresh: () -> Unit,
+    onPlayLocalFile: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val addonGroups = groups.filter { it.streams.isNotEmpty() || it.isLoading }
@@ -760,6 +776,12 @@ internal fun ProviderFilterRow(
             contentDescription = stringResource(Res.string.streams_refresh),
             isSelected = false,
             onClick = onRefresh,
+        )
+        FilterChip(
+            icon = Icons.Rounded.Folder,
+            contentDescription = "Play Local File",
+            isSelected = false,
+            onClick = onPlayLocalFile,
         )
         // "All" chip
         FilterChip(

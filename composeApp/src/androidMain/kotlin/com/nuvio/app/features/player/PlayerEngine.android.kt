@@ -1286,6 +1286,7 @@ private class NuvioLibmpvView(
                 mpv.setPropertyInt("sub-outline-size", style.toMpvSubtitleOutlineSize())
                 mpv.setPropertyInt("sub-border-size", style.toMpvSubtitleOutlineSize())
                 mpv.setPropertyInt("sub-pos", (100 - style.bottomOffset / 10).coerceIn(0, 100))
+                style.fontFamily?.let { mpv.setPropertyString("sub-font", it) }
             }
 
             override fun setSubtitleDelayMs(delayMs: Int) {
@@ -1602,6 +1603,9 @@ private fun PlayerView.applySubtitleStyle(style: SubtitleStyleState, pipScale: F
             SubtitleEdgeEffect.DEPRESSED -> CaptionStyleCompat.EDGE_TYPE_DEPRESSED
         }
 
+        val typeface = style.fontFamily?.let { Typeface.create(it, if (style.bold) Typeface.BOLD else Typeface.NORMAL) }
+            ?: if (style.bold) Typeface.DEFAULT_BOLD else Typeface.DEFAULT
+
         setApplyEmbeddedStyles(false)
         setApplyEmbeddedFontSizes(false)
         setBottomPaddingFraction(bottomPaddingFraction)
@@ -1612,7 +1616,7 @@ private fun PlayerView.applySubtitleStyle(style: SubtitleStyleState, pipScale: F
                 android.graphics.Color.TRANSPARENT,
                 edgeType,
                 style.outlineColor.toArgb(),
-                if (style.bold) Typeface.DEFAULT_BOLD else Typeface.DEFAULT,
+                typeface,
             )
         )
         setFixedTextSize(TypedValue.COMPLEX_UNIT_SP, style.fontSizeSp.toFloat() * pipScale)
