@@ -284,6 +284,7 @@ fun StreamsScreen(
                 },
                 onStreamLongPress = { stream -> streamActionsTarget = stream },
                 onRefresh = reloadStreams,
+                onPlayLocalFile = localFilePicker,
             )
         }
 
