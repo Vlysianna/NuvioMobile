@@ -418,6 +418,7 @@ fun LibraryScreen(
                             LibraryLayoutMode.HORIZONTAL -> librarySections(
                                 displaySections = librarySectionsDisplay,
                                 watchedKeys = watchedUiState.watchedKeys,
+                                calendarEntries = calendarEntries,
                                 showHeaderAccent = !homeCatalogSettingsUiState.hideCatalogUnderline,
                                 sortOption = effectiveSortOption,
                                 onPosterClick = onPosterClick,
