@@ -72,114 +72,104 @@ fun NextEpisodeCard(
             fadeOut(animationSpec = tween(160)),
         modifier = modifier,
     ) {
-        val shape = RoundedCornerShape(12.dp)
-        Column(
+        val maxCountdown = androidx.compose.runtime.remember { 
+            androidx.compose.runtime.mutableStateOf(autoPlayCountdownSec?.toFloat() ?: 10f) 
+        }
+        androidx.compose.runtime.LaunchedEffect(autoPlayCountdownSec) {
+            if (autoPlayCountdownSec != null && autoPlayCountdownSec > maxCountdown.value) {
+                maxCountdown.value = autoPlayCountdownSec.toFloat()
+            }
+        }
+        
+        val targetProgress = if (autoPlayCountdownSec != null && maxCountdown.value > 0) {
+            (1f - (autoPlayCountdownSec.toFloat() / maxCountdown.value)).coerceIn(0f, 1f)
+        } else {
+            if (isAutoPlaySearching) 1f else 0f
+        }
+        
+        val animatedProgress by androidx.compose.animation.core.animateFloatAsState(
+            targetValue = targetProgress,
+            animationSpec = tween(1000, easing = androidx.compose.animation.core.LinearEasing)
+        )
+
+        val shape = RoundedCornerShape(24.dp)
+        
+        Box(
             modifier = Modifier
-                .width(280.dp)
+                .widthIn(max = 300.dp, min = 200.dp)
                 .clip(shape)
-                .background(Color(0xFF141414).copy(alpha = 0.95f))
+                .background(Color.White)
                 .clickable { if (isPlayable) onPlayNext() }
         ) {
-            // Thumbnail area
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(157.dp)
-            ) {
-                AsyncImage(
-                    model = nextEpisode.thumbnail,
-                    contentDescription = stringResource(Res.string.player_next_episode_thumbnail),
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop,
-                )
-                // Bottom to top gradient
+            // Progress Bar Background
+            Box(modifier = Modifier.matchParentSize()) {
                 Box(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .background(
-                            Brush.verticalGradient(
-                                colors = listOf(
-                                    Color.Transparent,
-                                    Color(0xFF141414).copy(alpha = 0.95f),
-                                ),
-                                startY = 50f
-                            ),
+                        .fillMaxHeight()
+                        .fillMaxWidth(animatedProgress)
+                        .background(Color.Gray.copy(alpha = 0.25f))
+                )
+            }
+            
+            // Content
+            Row(
+                modifier = Modifier.padding(horizontal = 18.dp, vertical = 14.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = stringResource(Res.string.player_next_episode).uppercase(),
+                        color = Color.Black.copy(alpha = 0.6f),
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = stringResource(
+                            Res.string.compose_player_episode_title_format,
+                            nextEpisode.season,
+                            nextEpisode.episode,
+                            nextEpisode.title,
                         ),
-                )
-                
-                // "Up Next" Label at Top Left
-                Text(
-                    text = stringResource(Res.string.player_next_episode).uppercase(),
-                    color = Color.White,
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier
-                        .align(Alignment.TopStart)
-                        .padding(12.dp)
-                        .background(Color.Black.copy(alpha = 0.6f), RoundedCornerShape(4.dp))
-                        .padding(horizontal = 6.dp, vertical = 2.dp)
-                )
-
-                // Play Icon overlay
-                if (isPlayable) {
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.Center)
-                            .size(48.dp)
-                            .background(Color.Black.copy(alpha = 0.5f), CircleShape)
-                            .border(1.dp, Color.White.copy(alpha = 0.8f), CircleShape),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.PlayArrow,
-                            contentDescription = null,
-                            tint = Color.White,
-                            modifier = Modifier.size(28.dp)
+                        color = Color.Black,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    
+                    val autoPlayStatus = when {
+                        !isPlayable && !nextEpisode.unairedMessage.isNullOrBlank() -> nextEpisode.unairedMessage
+                        isAutoPlaySearching -> stringResource(Res.string.player_next_episode_finding_source)
+                        !autoPlaySourceName.isNullOrBlank() && autoPlayCountdownSec != null ->
+                            stringResource(
+                                Res.string.player_next_episode_playing_via_countdown,
+                                autoPlaySourceName,
+                                autoPlayCountdownSec,
+                            )
+                        else -> null
+                    }
+                    if (autoPlayStatus != null) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = autoPlayStatus,
+                            color = Color.Black.copy(alpha = 0.7f),
+                            fontSize = 13.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
                         )
                     }
                 }
-            }
-
-            // Info area
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 14.dp),
-            ) {
-                Text(
-                    text = stringResource(
-                        Res.string.compose_player_episode_title_format,
-                        nextEpisode.season,
-                        nextEpisode.episode,
-                        nextEpisode.title,
-                    ),
-                    color = Color.White,
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
                 
-                val autoPlayStatus = when {
-                    !isPlayable && !nextEpisode.unairedMessage.isNullOrBlank() -> nextEpisode.unairedMessage
-                    isAutoPlaySearching -> stringResource(Res.string.player_next_episode_finding_source)
-                    !autoPlaySourceName.isNullOrBlank() && autoPlayCountdownSec != null ->
-                        stringResource(
-                            Res.string.player_next_episode_playing_via_countdown,
-                            autoPlaySourceName,
-                            autoPlayCountdownSec,
-                        )
-                    else -> null
-                }
+                Spacer(modifier = Modifier.width(12.dp))
                 
-                if (autoPlayStatus != null) {
-                    Spacer(modifier = Modifier.height(6.dp))
-                    Text(
-                        text = autoPlayStatus,
-                        color = Color.White.copy(alpha = 0.7f),
-                        fontSize = 13.sp,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
+                // Play Icon
+                if (isPlayable) {
+                    Icon(
+                        imageVector = Icons.Default.PlayArrow,
+                        contentDescription = null,
+                        tint = Color.Black,
+                        modifier = Modifier.size(28.dp)
                     )
                 }
             }
