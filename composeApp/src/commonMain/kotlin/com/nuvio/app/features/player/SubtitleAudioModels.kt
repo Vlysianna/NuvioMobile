@@ -42,7 +42,7 @@ enum class AddonSubtitleStartupMode {
 enum class SubtitleEdgeEffect {
     NONE,
     OUTLINE,
-    DROP_SHADOW,
+    SHADOW,
     RAISED,
     DEPRESSED,
 }
@@ -65,6 +65,8 @@ data class SubtitleStyleState(
     val useForcedSubtitles: Boolean = false,
     val showOnlyPreferredLanguages: Boolean = false,
     val fontFamily: String? = null,
+    val customFontPath: String? = null,
+    val fitSubtitleToVideoSize: Boolean = false,
 ) {
     companion object {
         val DEFAULT = SubtitleStyleState()

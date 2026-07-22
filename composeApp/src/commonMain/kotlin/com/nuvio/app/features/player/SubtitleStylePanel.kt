@@ -132,12 +132,10 @@ fun SubtitleStylePanel(
             )
         }
 
-        SubtitleStyleSection(title = "Font Family") {
-            SubtitleFontFamilyPicker(
-                selectedFont = style.fontFamily,
-                onFontSelected = { font ->
-                    onStyleChanged(style.copy(fontFamily = font))
-                },
+        SubtitleStyleSection(title = "Fit subtitle into video size") {
+            SubtitleToggleChip(
+                enabled = style.fitSubtitleToVideoSize,
+                onClick = { onStyleChanged(style.copy(fitSubtitleToVideoSize = !style.fitSubtitleToVideoSize)) },
             )
         }
 
@@ -369,7 +367,7 @@ private fun SubtitleEdgeEffectPicker(
                     text = when (effect) {
                         SubtitleEdgeEffect.NONE -> stringResource(Res.string.compose_player_edge_effect_none)
                         SubtitleEdgeEffect.OUTLINE -> stringResource(Res.string.compose_player_edge_effect_outline)
-                        SubtitleEdgeEffect.DROP_SHADOW -> stringResource(Res.string.compose_player_edge_effect_drop_shadow)
+                        SubtitleEdgeEffect.SHADOW -> stringResource(Res.string.compose_player_edge_effect_drop_shadow)
                         SubtitleEdgeEffect.RAISED -> stringResource(Res.string.compose_player_edge_effect_raised)
                         SubtitleEdgeEffect.DEPRESSED -> stringResource(Res.string.compose_player_edge_effect_depressed)
                     },
@@ -571,40 +569,4 @@ private val SubtitleOutlineColorSwatches = listOf(
     Color(0xFFFF5C5C),
 )
 
-@Composable
-private fun SubtitleFontFamilyPicker(
-    selectedFont: String?,
-    onFontSelected: (String?) -> Unit,
-) {
-    val fonts = listOf(
-        null to "Default",
-        "sans-serif" to "Sans Serif",
-        "serif" to "Serif",
-        "monospace" to "Monospace",
-        "cursive" to "Cursive",
-    )
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .horizontalScroll(rememberScrollState()),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        fonts.forEach { (fontKey, fontName) ->
-            val selected = fontKey == selectedFont
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(if (selected) MaterialTheme.nuvio.colors.accent else Color.White.copy(alpha = 0.08f))
-                    .clickable { onFontSelected(fontKey) }
-                    .padding(horizontal = 14.dp, vertical = 10.dp),
-            ) {
-                Text(
-                    text = fontName,
-                    color = if (selected) MaterialTheme.nuvio.colors.onAccent else Color.White,
-                    style = MaterialTheme.typography.labelLarge,
-                )
-            }
-        }
-    }
-}
 

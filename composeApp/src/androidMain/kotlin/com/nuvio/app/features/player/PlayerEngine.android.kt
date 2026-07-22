@@ -1363,13 +1363,46 @@ private class NuvioLibmpvView(
                 mpv.setPropertyString("sub-back-color", style.backgroundColor.toMpvColor())
                 mpv.setPropertyString("sub-outline-color", style.outlineColor.toMpvColor())
                 mpv.setPropertyString("sub-border-color", style.outlineColor.toMpvColor())
-                mpv.setPropertyString("sub-border-style", style.toMpvSubtitleBorderStyle())
                 mpv.setPropertyString("sub-bold", if (style.bold) "yes" else "no")
                 mpv.setPropertyInt("sub-font-size", style.toMpvSubtitleFontSize())
                 mpv.setPropertyInt("sub-outline-size", style.toMpvSubtitleOutlineSize())
                 mpv.setPropertyInt("sub-border-size", style.toMpvSubtitleOutlineSize())
+                
+                if (style.fitSubtitleToVideoSize) {
+                    mpv.setPropertyString("sub-scale-with-window", "no")
+                } else {
+                    mpv.setPropertyString("sub-scale-with-window", "yes")
+                }
+
+                if (style.edgeEffect == SubtitleEdgeEffect.SHADOW) {
+                    mpv.setPropertyString("sub-shadow-color", style.outlineColor.toMpvColor())
+                    mpv.setPropertyInt("sub-shadow-offset", 2)
+                    mpv.setPropertyString("sub-border-style", "background-box")
+                } else {
+                    mpv.setPropertyInt("sub-shadow-offset", 0)
+                    mpv.setPropertyString("sub-border-style", style.toMpvSubtitleBorderStyle())
+                }
+
                 mpv.setPropertyInt("sub-pos", (100 - style.bottomOffset / 10).coerceIn(0, 100))
-                style.fontFamily?.let { mpv.setPropertyString("sub-font", it) }
+                
+                try {
+                    style.customFontPath?.let { path ->
+                        val uri = android.net.Uri.parse(path)
+                        val cacheDir = context.cacheDir
+                        val fontFile = java.io.File(cacheDir, "custom_font.ttf")
+                        if (uri.scheme == "content") {
+                            context.contentResolver.openInputStream(uri)?.use { input ->
+                                fontFile.outputStream().use { output -> input.copyTo(output) }
+                            }
+                        } else if (path != fontFile.absolutePath) {
+                            java.io.File(path).copyTo(fontFile, overwrite = true)
+                        }
+                        mpv.setPropertyString("sub-fonts-dir", cacheDir.absolutePath)
+                        mpv.setPropertyString("sub-font", fontFile.nameWithoutExtension)
+                    } ?: style.fontFamily?.let { mpv.setPropertyString("sub-font", it) }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to load custom font for MPV", e)
+                }
             }
 
             override fun setSubtitleDelayMs(delayMs: Int) {
@@ -1681,13 +1714,32 @@ private fun PlayerView.applySubtitleStyle(style: SubtitleStyleState, pipScale: F
                 CaptionStyleCompat.EDGE_TYPE_NONE
             }
             SubtitleEdgeEffect.OUTLINE -> CaptionStyleCompat.EDGE_TYPE_OUTLINE
-            SubtitleEdgeEffect.DROP_SHADOW -> CaptionStyleCompat.EDGE_TYPE_DROP_SHADOW
+            SubtitleEdgeEffect.SHADOW -> CaptionStyleCompat.EDGE_TYPE_DROP_SHADOW
             SubtitleEdgeEffect.RAISED -> CaptionStyleCompat.EDGE_TYPE_RAISED
             SubtitleEdgeEffect.DEPRESSED -> CaptionStyleCompat.EDGE_TYPE_DEPRESSED
         }
 
-        val typeface = style.fontFamily?.let { Typeface.create(it, if (style.bold) Typeface.BOLD else Typeface.NORMAL) }
-            ?: if (style.bold) Typeface.DEFAULT_BOLD else Typeface.DEFAULT
+        val typeface = try {
+            style.customFontPath?.let { path ->
+                val uri = android.net.Uri.parse(path)
+                if (uri.scheme == "content") {
+                    val cacheDir = context.cacheDir
+                    val fontFile = java.io.File(cacheDir, "custom_font.ttf")
+                    context.contentResolver.openInputStream(uri)?.use { input ->
+                        fontFile.outputStream().use { output -> input.copyTo(output) }
+                    }
+                    val tf = Typeface.createFromFile(fontFile)
+                    if (style.bold) Typeface.create(tf, Typeface.BOLD) else tf
+                } else {
+                    val tf = Typeface.createFromFile(path)
+                    if (style.bold) Typeface.create(tf, Typeface.BOLD) else tf
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to load custom font", e)
+            null
+        } ?: (style.fontFamily?.let { Typeface.create(it, if (style.bold) Typeface.BOLD else Typeface.NORMAL) }
+            ?: if (style.bold) Typeface.DEFAULT_BOLD else Typeface.DEFAULT)
 
         setApplyEmbeddedStyles(false)
         setApplyEmbeddedFontSizes(false)
@@ -1702,7 +1754,11 @@ private fun PlayerView.applySubtitleStyle(style: SubtitleStyleState, pipScale: F
                 typeface,
             )
         )
-        setFixedTextSize(TypedValue.COMPLEX_UNIT_SP, style.fontSizeSp.toFloat() * pipScale)
+        if (style.fitSubtitleToVideoSize) {
+            setFractionalTextSize(style.fontSizeSp / 330f * pipScale)
+        } else {
+            setFixedTextSize(TypedValue.COMPLEX_UNIT_SP, style.fontSizeSp.toFloat() * pipScale)
+        }
     }
 }
 

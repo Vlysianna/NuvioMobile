@@ -6,6 +6,7 @@ import androidx.compose.runtime.Composable
 
 @Composable
 actual fun rememberLocalFilePicker(
+    mimeTypes: List<String>,
     onFilePicked: (String?) -> Unit
 ): () -> Unit {
     val launcher = rememberLauncherForActivityResult(
@@ -14,6 +15,6 @@ actual fun rememberLocalFilePicker(
         onFilePicked(uri?.toString())
     }
     return {
-        launcher.launch(arrayOf("video/mp4", "video/x-matroska"))
+        launcher.launch(mimeTypes.toTypedArray())
     }
 }

@@ -284,7 +284,7 @@ private fun subtitleColorLabel(color: Color): String {
 private fun subtitleEdgeEffectLabel(effect: SubtitleEdgeEffect): String = when (effect) {
     SubtitleEdgeEffect.NONE -> stringResource(Res.string.settings_playback_subtitle_edge_effect_none)
     SubtitleEdgeEffect.OUTLINE -> stringResource(Res.string.settings_playback_subtitle_edge_effect_outline)
-    SubtitleEdgeEffect.DROP_SHADOW -> stringResource(Res.string.settings_playback_subtitle_edge_effect_drop_shadow)
+    SubtitleEdgeEffect.SHADOW -> stringResource(Res.string.compose_player_edge_effect_drop_shadow)
     SubtitleEdgeEffect.RAISED -> stringResource(Res.string.settings_playback_subtitle_edge_effect_raised)
     SubtitleEdgeEffect.DEPRESSED -> stringResource(Res.string.settings_playback_subtitle_edge_effect_depressed)
 }
@@ -575,6 +575,22 @@ private fun PlaybackSettingsSection(
                     onValueChange = { value ->
                         PlayerSettingsRepository.setSubtitleStyle(subtitleStyle.copy(fontSizeSp = value))
                     },
+                )
+                SettingsGroupDivider(isTablet = isTablet)
+                val pickFontLauncher = com.nuvio.app.features.streams.rememberLocalFilePicker(
+                    mimeTypes = listOf("font/ttf", "font/otf", "application/x-font-ttf", "application/x-font-opentype"),
+                    onFilePicked = { uri ->
+                        if (uri != null) {
+                            PlayerSettingsRepository.setSubtitleStyle(subtitleStyle.copy(customFontPath = uri))
+                        }
+                    }
+                )
+                SettingsNavigationRow(
+                    title = "Import Custom Font",
+                    description = subtitleStyle.customFontPath?.substringAfterLast('/') ?: stringResource(Res.string.settings_playback_not_set),
+                    enabled = subtitleRenderingEnabled,
+                    isTablet = isTablet,
+                    onClick = { pickFontLauncher() },
                 )
                 SettingsGroupDivider(isTablet = isTablet)
                 SettingsSliderRow(
