@@ -2817,7 +2817,7 @@ private fun SubtitleEdgeEffectDialog(
             Res.string.settings_playback_subtitle_edge_effect_outline_description,
         ),
         Triple(
-            SubtitleEdgeEffect.DROP_SHADOW,
+            SubtitleEdgeEffect.SHADOW,
             Res.string.settings_playback_subtitle_edge_effect_drop_shadow,
             Res.string.settings_playback_subtitle_edge_effect_drop_shadow_description,
         ),

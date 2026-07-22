@@ -9,6 +9,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -99,12 +100,13 @@ fun SkipIntroButton(
         exit = fadeOut(tween(200)) + scaleOut(tween(200), targetScale = 0.8f),
         modifier = modifier,
     ) {
-        val shape = RoundedCornerShape(16.dp)
+        val shape = RoundedCornerShape(8.dp)
         Column(
             modifier = Modifier
                 .width(IntrinsicSize.Max)
                 .clip(shape)
-                .background(Color(0xFF1E1E1E).copy(alpha = 0.85f))
+                .background(Color(0xFF141414).copy(alpha = 0.95f))
+                .border(1.dp, Color.White.copy(alpha = 0.15f), shape)
                 .clickable { onSkip() },
         ) {
             Row(
@@ -121,6 +123,7 @@ fun SkipIntroButton(
                     text = skipLabel(lastType),
                     color = Color.White,
                     fontSize = 14.sp,
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.Medium,
                     modifier = Modifier.padding(start = 8.dp),
                 )
             }
@@ -128,16 +131,16 @@ fun SkipIntroButton(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(3.dp)
-                    .clip(RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp))
-                    .background(Color.White.copy(alpha = if (controlsVisible || autoHidden || dismissed) 0f else 0.15f)),
+                    .clip(RoundedCornerShape(bottomStart = 8.dp, bottomEnd = 8.dp))
+                    .background(Color.White.copy(alpha = if (controlsVisible || autoHidden || dismissed) 0f else 0.25f)),
             ) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth(progress.value)
                         .height(3.dp)
                         .background(
-                            Color(0xFF1E1E1E).copy(
-                                alpha = if (controlsVisible || autoHidden || dismissed) 0f else 0.85f,
+                            Color(0xFF141414).copy(
+                                alpha = if (controlsVisible || autoHidden || dismissed) 0f else 0.95f,
                             ),
                         ),
                 )

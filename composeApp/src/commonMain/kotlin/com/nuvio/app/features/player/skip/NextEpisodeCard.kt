@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -71,22 +72,19 @@ fun NextEpisodeCard(
             fadeOut(animationSpec = tween(160)),
         modifier = modifier,
     ) {
-        val shape = RoundedCornerShape(16.dp)
-        Row(
+        val shape = RoundedCornerShape(12.dp)
+        Column(
             modifier = Modifier
-                .widthIn(max = 292.dp)
+                .width(280.dp)
                 .clip(shape)
-                .background(Color(0xFF191919).copy(alpha = 0.89f))
-                .border(1.dp, Color.White.copy(alpha = 0.12f), shape)
+                .background(Color(0xFF141414).copy(alpha = 0.95f))
                 .clickable { if (isPlayable) onPlayNext() }
-                .padding(horizontal = 9.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
         ) {
-            // Thumbnail
+            // Thumbnail area
             Box(
                 modifier = Modifier
-                    .size(width = 78.dp, height = 44.dp)
-                    .clip(RoundedCornerShape(9.dp)),
+                    .fillMaxWidth()
+                    .height(157.dp)
             ) {
                 AsyncImage(
                     model = nextEpisode.thumbnail,
@@ -94,6 +92,7 @@ fun NextEpisodeCard(
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop,
                 )
+                // Bottom to top gradient
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -101,27 +100,52 @@ fun NextEpisodeCard(
                             Brush.verticalGradient(
                                 colors = listOf(
                                     Color.Transparent,
-                                    Color.Black.copy(alpha = 0.32f),
+                                    Color(0xFF141414).copy(alpha = 0.95f),
                                 ),
+                                startY = 50f
                             ),
                         ),
                 )
+                
+                // "Up Next" Label at Top Left
+                Text(
+                    text = stringResource(Res.string.player_next_episode).uppercase(),
+                    color = Color.White,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .padding(12.dp)
+                        .background(Color.Black.copy(alpha = 0.6f), RoundedCornerShape(4.dp))
+                        .padding(horizontal = 6.dp, vertical = 2.dp)
+                )
+
+                // Play Icon overlay
+                if (isPlayable) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .size(48.dp)
+                            .background(Color.Black.copy(alpha = 0.5f), CircleShape)
+                            .border(1.dp, Color.White.copy(alpha = 0.8f), CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.PlayArrow,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(28.dp)
+                        )
+                    }
+                }
             }
 
-            Spacer(modifier = Modifier.width(8.dp))
-
-            // Info
+            // Info area
             Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 14.dp),
             ) {
-                Text(
-                    text = stringResource(Res.string.player_next_episode),
-                    color = Color.White.copy(alpha = 0.8f),
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.Medium,
-                )
-                Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = stringResource(
                         Res.string.compose_player_episode_title_format,
@@ -130,11 +154,12 @@ fun NextEpisodeCard(
                         nextEpisode.title,
                     ),
                     color = Color.White,
-                    fontSize = 12.sp,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Bold,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    fontWeight = FontWeight.SemiBold,
                 )
+                
                 val autoPlayStatus = when {
                     !isPlayable && !nextEpisode.unairedMessage.isNullOrBlank() -> nextEpisode.unairedMessage
                     isAutoPlaySearching -> stringResource(Res.string.player_next_episode_finding_source)
@@ -146,43 +171,17 @@ fun NextEpisodeCard(
                         )
                     else -> null
                 }
+                
                 if (autoPlayStatus != null) {
-                    Spacer(modifier = Modifier.height(2.dp))
+                    Spacer(modifier = Modifier.height(6.dp))
                     Text(
                         text = autoPlayStatus,
-                        color = Color.White.copy(alpha = 0.78f),
-                        fontSize = 10.sp,
+                        color = Color.White.copy(alpha = 0.7f),
+                        fontSize = 13.sp,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
                 }
-            }
-
-            // Play badge
-            Row(
-                modifier = Modifier
-                    .padding(start = 4.dp)
-                    .clip(CircleShape)
-                    .border(1.dp, Color.White.copy(alpha = 0.2f), CircleShape)
-                    .padding(horizontal = 8.dp, vertical = 5.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Icon(
-                    imageVector = Icons.Default.PlayArrow,
-                    contentDescription = null,
-                    tint = if (isPlayable) Color.White else Color.White.copy(alpha = 0.65f),
-                    modifier = Modifier.size(13.dp),
-                )
-                Text(
-                    text = if (isPlayable) {
-                        stringResource(Res.string.detail_btn_play)
-                    } else {
-                        stringResource(Res.string.player_next_episode_unaired)
-                    },
-                    color = if (isPlayable) Color.White else Color.White.copy(alpha = 0.72f),
-                    fontSize = 11.sp,
-                    modifier = Modifier.padding(start = 3.dp),
-                )
             }
         }
     }
