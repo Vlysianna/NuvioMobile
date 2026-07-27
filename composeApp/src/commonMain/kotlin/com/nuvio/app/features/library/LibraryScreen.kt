@@ -85,11 +85,10 @@ import com.nuvio.app.features.home.components.HomeEmptyStateCard
 import com.nuvio.app.features.home.components.HomePosterCard
 import com.nuvio.app.features.home.components.HomeSkeletonRow
 import com.nuvio.app.features.home.components.posterGridColumnCountForWidth
+import com.nuvio.app.core.format.formatReleaseDateForDisplay
 import com.nuvio.app.features.profiles.ProfileRepository
 import com.nuvio.app.features.watched.WatchedRepository
 import com.nuvio.app.features.watching.application.WatchingState
-import com.nuvio.app.features.trakt.TraktCalendarRepository
-import com.nuvio.app.features.trakt.TraktCalendarEntry
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.launch
@@ -125,7 +124,6 @@ fun LibraryScreen(
         LibraryDisplaySettingsRepository.uiState
     }.collectAsStateWithLifecycle()
     val networkStatusUiState by NetworkStatusRepository.uiState.collectAsStateWithLifecycle()
-    val calendarEntries by TraktCalendarRepository.upcomingShows.collectAsStateWithLifecycle()
     var observedOfflineState by remember { mutableStateOf(false) }
     var sourceModeName by rememberSaveable { mutableStateOf(LibraryViewMode.Saved.name) }
     val sourceMode = remember(sourceModeName) {
@@ -1203,9 +1201,7 @@ private fun LazyListScope.librarySections(
             val item = entry.item
             val posterItem = item.toMetaPreview()
             val entrySource = entry.section
-            val upcomingDate = calendarEntries.firstOrNull { 
-                it.tmdbId?.toString() == item.id || it.imdbId == item.id 
-            }?.firstAired?.substringBefore("T")
+            val upcomingDate = item.releaseInfo?.let { formatReleaseDateForDisplay(it) }
 
             DisintegratingContainer(
                 disintegrating = entry.exiting,
