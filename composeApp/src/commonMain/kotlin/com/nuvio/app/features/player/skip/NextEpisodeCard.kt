@@ -26,6 +26,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.rounded.Folder
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -60,6 +61,7 @@ fun NextEpisodeCard(
     autoPlayCountdownSec: Int?,
     onPlayNext: () -> Unit,
     onDismiss: () -> Unit,
+    onPlayLocalFile: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     if (nextEpisode == null) return
@@ -128,8 +130,21 @@ fun NextEpisodeCard(
                     color = Color.White,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
-                    modifier = Modifier.padding(start = 8.dp),
+                    modifier = Modifier.padding(start = 8.dp).weight(1f, fill = false),
                 )
+
+                if (onPlayLocalFile != null) {
+                    androidx.compose.material3.IconButton(
+                        onClick = onPlayLocalFile,
+                        modifier = Modifier.size(24.dp).padding(start = 12.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.Folder,
+                            contentDescription = "Play Local File",
+                            tint = Color.White
+                        )
+                    }
+                }
             }
             
             // Progress Bar

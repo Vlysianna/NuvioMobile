@@ -354,6 +354,23 @@ private fun BoxScope.RenderPlaybackOverlays(
     p2pRebufferMessage: String?,
     p2pRebufferProgress: Float?,
 ) {
+    val nextEpisodeLocalPicker = com.nuvio.app.features.streams.rememberLocalFilePicker { uri ->
+        if (uri != null) {
+            val nextVideoId = runtime.nextEpisodeInfo?.videoId
+            val nextVideo = runtime.playerMetaVideos.firstOrNull { it.id == nextVideoId }
+            if (nextVideo != null) {
+                val stream = com.nuvio.app.features.streams.StreamItem(
+                    name = "Local File",
+                    url = uri,
+                    addonName = "Local",
+                    addonId = "local",
+                )
+                runtime.nextEpisodeAutoPlayJob?.cancel()
+                runtime.switchToEpisodeStream(stream, nextVideo)
+            }
+        }
+    }
+
     runtime.run {
         PlayerPlaybackOverlays(
             playerControlsLocked = playerControlsLocked,
@@ -408,6 +425,7 @@ private fun BoxScope.RenderPlaybackOverlays(
             nextEpisodeAutoPlaySourceName = null
             nextEpisodeAutoPlayCountdown = null
         },
+        onPlayLocalFile = { nextEpisodeLocalPicker() },
         errorMessage = errorMessage,
             onDismissError = {
                 flushWatchProgress()

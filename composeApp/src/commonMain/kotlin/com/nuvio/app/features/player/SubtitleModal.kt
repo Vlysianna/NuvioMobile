@@ -278,6 +278,16 @@ fun SubtitleModal(
                                     onAutoSyncCapture = onAutoSyncCapture,
                                     onAutoSyncCueSelected = onAutoSyncCueSelected,
                                     onAutoSyncReload = onAutoSyncReload,
+                                    onLocalSubtitlePicked = { uri ->
+                                        val addon = AddonSubtitle(
+                                            id = "local_${uri.hashCode()}",
+                                            url = uri,
+                                            language = "local",
+                                            display = "Local Subtitle",
+                                            addonName = "Local File"
+                                        )
+                                        onAddonSubtitleSelected(addon)
+                                    }
                                 )
                             }
                         }

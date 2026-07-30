@@ -78,6 +78,7 @@ fun SubtitleStylePanel(
     onAutoSyncCapture: () -> Unit,
     onAutoSyncCueSelected: (SubtitleSyncCue) -> Unit,
     onAutoSyncReload: () -> Unit,
+    onLocalSubtitlePicked: (String) -> Unit = {},
 ) {
     val sectionGap = if (isCompact) 12.dp else 16.dp
 
@@ -136,6 +137,18 @@ fun SubtitleStylePanel(
             SubtitleToggleChip(
                 enabled = style.fitSubtitleToVideoSize,
                 onClick = { onStyleChanged(style.copy(fitSubtitleToVideoSize = !style.fitSubtitleToVideoSize)) },
+            )
+        }
+
+        SubtitleStyleSection(title = "Local Subtitle") {
+            val localSubtitlePicker = com.nuvio.app.features.streams.rememberLocalFilePicker { uri ->
+                if (uri != null) {
+                    onLocalSubtitlePicked(uri)
+                }
+            }
+            SubtitleTextAction(
+                label = "Pick .srt / .ass file",
+                onClick = { localSubtitlePicker() },
             )
         }
 
